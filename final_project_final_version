@@ -1,0 +1,289 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "id": "65cd475b",
+   "metadata": {},
+   "source": [
+    "# Final Project - Paths from Techno-Z to bars\n",
+    "By: Klara Honzak, Jonas Kaiser"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "040e9266",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import networkx as nx \n",
+    "import osmnx as ox \n",
+    "import folium\n",
+    "from IPython.display import IFrame"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "67957d96",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "#load the street map of Salzburg\n",
+    "G = ox.graph_from_place(\"Salzburg, Austria\", network_type=\"walk\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "id": "9428b1fe",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "m1 = ox.plot_graph_folium(G, popup_attribute=\"name\", weight=2, color=\"#8b0000\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "id": "ad7e31f4",
+   "metadata": {
+    "scrolled": false
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "\n",
+       "        <iframe\n",
+       "            width=\"600\"\n",
+       "            height=\"500\"\n",
+       "            src=\"Downloads.html\"\n",
+       "            frameborder=\"0\"\n",
+       "            allowfullscreen\n",
+       "            \n",
+       "        ></iframe>\n",
+       "        "
+      ],
+      "text/plain": [
+       "<IPython.lib.display.IFrame at 0x1ab387bbac0>"
+      ]
+     },
+     "execution_count": 4,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# save as html file then display map as an iframe\n",
+    "filepath = \"Downloads.html\"\n",
+    "m1.save(filepath)\n",
+    "IFrame(filepath, width=600, height=500)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "3e191492",
+   "metadata": {},
+   "source": [
+    "## Shortest path from Techno-Z to several bars in Salzburg\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 26,
+   "id": "ebf61783",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# coordinates of Techno-Z and bars\n",
+    "\n",
+    "Techno_Z=[13.0398849,47.8228926]\n",
+    "Schnaitl=[13.0456583,47.8030244]\n",
+    "Monkeys=[13.0479551,47.8006314]\n",
+    "Shamrock=[13.0455082,47.800369]"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 27,
+   "id": "093dc14f",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# this function maps the shortest path between two points\n",
+    "# \"startpoint\" and \"endpoint\" are tuples with coordinates\n",
+    "\n",
+    "def shortest_path(startpoint, endpoint):\n",
+    "    origin_node = ox.distance.nearest_nodes(G, startpoint[0], startpoint[1])\n",
+    "    destination_node = ox.distance.nearest_nodes(G, endpoint[0], endpoint[1])\n",
+    "    route = nx.shortest_path(G, origin_node, destination_node)\n",
+    "    m = ox.plot_route_folium(G, route, weight=3)\n",
+    "    return m"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 28,
+   "id": "df06c870",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def add_markers(m, startpoint, endpoint, popup_startpoint, popup_endpoint):\n",
+    "    origin_node = ox.distance.nearest_nodes(G, startpoint[0], startpoint[1])\n",
+    "    destination_node = ox.distance.nearest_nodes(G, endpoint[0], endpoint[1])\n",
+    "    data = [\n",
+    "    (G.nodes[destination_node] ['y'],G.nodes[destination_node] ['x']),\n",
+    "    (G.nodes[origin_node] ['y'],G.nodes[origin_node] ['x'])\n",
+    "    ]\n",
+    "    folium.Marker(location=[data[0][0], data[0][1]],\n",
+    "                  icon=folium.Icon(color='green', icon='beer', prefix ='fa'),\n",
+    "                  popup=popup_endpoint).add_to(m)\n",
+    "\n",
+    "    folium.Marker(location=[data[1][0], data[1][1]],\n",
+    "                  icon=folium.Icon(color='red', icon='graduation-cap', prefix ='fa'),\n",
+    "                  popup=popup_startpoint).add_to(m)\n",
+    "    filepath = \"Downloads.html\"\n",
+    "    m.save(filepath)\n",
+    "    return IFrame(filepath, width=600, height=500)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 29,
+   "id": "8af8d66a",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "\n",
+       "        <iframe\n",
+       "            width=\"600\"\n",
+       "            height=\"500\"\n",
+       "            src=\"Downloads.html\"\n",
+       "            frameborder=\"0\"\n",
+       "            allowfullscreen\n",
+       "            \n",
+       "        ></iframe>\n",
+       "        "
+      ],
+      "text/plain": [
+       "<IPython.lib.display.IFrame at 0x1ab4cc62410>"
+      ]
+     },
+     "execution_count": 29,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# Path from Techno-Z to Schnaitl\n",
+    "m=shortest_path(Techno_Z, Schnaitl)\n",
+    "m=add_markers(m, Techno_Z, Schnaitl,\n",
+    "              '''Name: Techno-Z <br> Address: Schillerstraße 30/3. OG, 5020 Salzburg''',\n",
+    "              '''Name: Schnaitl <br> Address: Berg Str. 5, 5020 Salzburg''')\n",
+    "m"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 30,
+   "id": "a910a84c",
+   "metadata": {
+    "scrolled": true
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "\n",
+       "        <iframe\n",
+       "            width=\"600\"\n",
+       "            height=\"500\"\n",
+       "            src=\"Downloads.html\"\n",
+       "            frameborder=\"0\"\n",
+       "            allowfullscreen\n",
+       "            \n",
+       "        ></iframe>\n",
+       "        "
+      ],
+      "text/plain": [
+       "<IPython.lib.display.IFrame at 0x1ab4cc02d10>"
+      ]
+     },
+     "execution_count": 30,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# Path from Techno-Z to Monkey´s\n",
+    "m=shortest_path(Techno_Z, Monkeys)\n",
+    "m=add_markers(m, Techno_Z, Monkeys,\n",
+    "              '''Name: Techno-Z <br> Address: Schillerstraße 30/3. OG, 5020 Salzburg''',\n",
+    "              '''Name: Monkeys <br> Address: Imbergstraße 2A, 5020 Salzburg''')\n",
+    "m"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 34,
+   "id": "bfe96475",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "\n",
+       "        <iframe\n",
+       "            width=\"600\"\n",
+       "            height=\"500\"\n",
+       "            src=\"Downloads.html\"\n",
+       "            frameborder=\"0\"\n",
+       "            allowfullscreen\n",
+       "            \n",
+       "        ></iframe>\n",
+       "        "
+      ],
+      "text/plain": [
+       "<IPython.lib.display.IFrame at 0x1ab4cf8b220>"
+      ]
+     },
+     "execution_count": 34,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# Path from Techno-Z to Shamrock\n",
+    "m=shortest_path(Techno_Z, Shamrock)\n",
+    "m=add_markers(m, Techno_Z, Shamrock,\n",
+    "              '''Name: Techno-Z <br> Address: Schillerstraße 30/3. OG, 5020 Salzburg''',\n",
+    "              '''Name: Shamrock <br> Address: Rudolfskai 12, 5020 Salzburg''')\n",
+    "m"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python [conda env:ox]",
+   "language": "python",
+   "name": "conda-env-ox-py"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.10.4"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
